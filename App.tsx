@@ -1,5 +1,4 @@
-
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { HomePage } from './pages/HomePage';
 import { ArticlePage } from './pages/ArticlePage';
 import { Header } from './components/Header';
@@ -19,10 +18,26 @@ type View = {
 
 const App: React.FC = () => {
   const [view, setView] = useState<View>({ name: 'home' });
-  const [articles, setArticles] = useState<Article[]>(MOCK_ARTICLES);
+  const [articles, setArticles] = useState<Article[]>(() => {
+    try {
+      const savedArticles = window.localStorage.getItem('ennui-articles');
+      return savedArticles ? JSON.parse(savedArticles) : MOCK_ARTICLES;
+    } catch (error) {
+      console.error("Could not parse articles from localStorage", error);
+      return MOCK_ARTICLES;
+    }
+  });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('ennui-articles', JSON.stringify(articles));
+    } catch (error) {
+      console.error("Could not save articles to localStorage", error);
+    }
+  }, [articles]);
 
   const handleSelectArticle = useCallback((article: Article) => {
     window.scrollTo(0, 0);
@@ -68,7 +83,11 @@ const App: React.FC = () => {
   const renderView = () => {
     switch (view.name) {
       case 'article':
-        return <ArticlePage article={view.article} />;
+        return <ArticlePage 
+                 article={view.article} 
+                 allArticles={articles}
+                 onSelectArticle={handleSelectArticle}
+               />;
       case 'home':
       default:
         return <HomePage articles={articles} onSelectArticle={handleSelectArticle} />;

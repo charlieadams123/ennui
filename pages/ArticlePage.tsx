@@ -1,15 +1,17 @@
-
 import React from 'react';
 import type { Article } from '../types';
 import { AdBanner } from '../components/AdBanner';
 import { NewsletterSignup } from '../components/NewsletterSignup';
+import { RelatedArticles } from '../components/RelatedArticles';
 import { marked } from 'marked';
 
 interface ArticlePageProps {
   article: Article;
+  allArticles: Article[];
+  onSelectArticle: (article: Article) => void;
 }
 
-export const ArticlePage: React.FC<ArticlePageProps> = ({ article }) => {
+export const ArticlePage: React.FC<ArticlePageProps> = ({ article, allArticles, onSelectArticle }) => {
   const parsedContent = marked.parse(article.content);
 
   return (
@@ -42,6 +44,14 @@ export const ArticlePage: React.FC<ArticlePageProps> = ({ article }) => {
 
       <div className="my-12">
         <NewsletterSignup />
+      </div>
+
+      <div className="my-12">
+        <RelatedArticles 
+          currentArticleId={article.id}
+          allArticles={allArticles}
+          onSelectArticle={onSelectArticle}
+        />
       </div>
 
     </article>

@@ -1,11 +1,14 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { GenerateContentResponse } from "@google/genai";
 
-if (!process.env.API_KEY) {
+// Fix: Use process.env.API_KEY to align with coding guidelines and resolve environment variable access issues.
+const apiKey = process.env.API_KEY;
+
+if (!apiKey) {
     throw new Error("API_KEY environment variable is not set.");
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey });
 
 const articleSchema = {
   type: Type.OBJECT,
