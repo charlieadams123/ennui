@@ -8,6 +8,7 @@ import { MOCK_ARTICLES } from './constants';
 import { CreateArticleModal } from './components/CreateArticleModal';
 import { generateArticleContent, generateArticleImage } from './services/geminiService';
 import { LoadingSpinner } from './components/LoadingSpinner';
+import { saveArticle, subscribeToArticles } from './services/articleRepository';
 
 type View = {
   name: 'home';
@@ -18,26 +19,30 @@ type View = {
 
 const App: React.FC = () => {
   const [view, setView] = useState<View>({ name: 'home' });
-  const [articles, setArticles] = useState<Article[]>(() => {
-    try {
-      const savedArticles = window.localStorage.getItem('ennui-articles');
-      return savedArticles ? JSON.parse(savedArticles) : MOCK_ARTICLES;
-    } catch (error) {
-      console.error("Could not parse articles from localStorage", error);
-      return MOCK_ARTICLES;
-    }
-  });
+  const [articles, setArticles] = useState<Article[]>(MOCK_ARTICLES);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    try {
-      window.localStorage.setItem('ennui-articles', JSON.stringify(articles));
-    } catch (error) {
-      console.error("Could not save articles to localStorage", error);
-    }
-  }, [articles]);
+    const unsubscribe = subscribeToArticles(
+      (fetchedArticles) => {
+        if (fetchedArticles.length > 0) {
+          setArticles(fetchedArticles);
+        } else {
+          setArticles(MOCK_ARTICLES);
+        }
+        setIsHydrated(true);
+      },
+      (error) => {
+        console.error('Failed to fetch articles from Firestore', error);
+        setIsHydrated(true);
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
 
   const handleSelectArticle = useCallback((article: Article) => {
     window.scrollTo(0, 0);
@@ -69,7 +74,7 @@ const App: React.FC = () => {
         excerpt: content.split('\n\n')[0]
       };
       
-      setArticles(prev => [newArticle, ...prev]);
+      await saveArticle(newArticle);
       handleGoHome();
     } catch (error) {
       console.error("Failed to create article:", error);
