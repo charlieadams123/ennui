@@ -1,14 +1,8 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { GenerateContentResponse } from "@google/genai";
 
-// Fix: Use process.env.API_KEY to align with coding guidelines and resolve environment variable access issues.
-const apiKey = process.env.API_KEY;
-
-if (!apiKey) {
-    throw new Error("API_KEY environment variable is not set.");
-}
-
-const ai = new GoogleGenAI({ apiKey });
+// Fix: Updated Gemini API client initialization to use `process.env.API_KEY` as per coding guidelines.
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
 
 const articleSchema = {
   type: Type.OBJECT,
@@ -65,7 +59,6 @@ export const generateArticleImage = async (prompt: string): Promise<string> => {
   });
   
   if (response.generatedImages && response.generatedImages.length > 0) {
-    // Fix: Correctly access the imageBytes property via the nested image object.
     const base64ImageBytes: string = response.generatedImages[0].image.imageBytes;
     return `data:image/jpeg;base64,${base64ImageBytes}`;
   }
